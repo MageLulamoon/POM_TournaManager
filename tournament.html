@@ -4,8 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POM — Podium of Mages Tournament Manager</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
+  /* ===== SYSTEM FONT STACK (no external dependencies) ===== */
+  @font-face {
+    font-family: 'Display';
+    src: local('Georgia'), local('Times New Roman');
+  }
+  :root {
+    --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+    --font-body: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
 /* ===== VARIABLES ===== */
 :root {
   --purple:#8540b5; --purple-light:#a860d8; --purple-dark:#5e2d82;
@@ -28,7 +36,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{
-  font-family:'Nunito',sans-serif;
+  font-family:var(--font-body);
   background:var(--bg);color:var(--text);
   min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden;
 }
@@ -61,7 +69,7 @@ header{
   height:60px;gap:16px;
 }
 .logo{
-  font-family:'Cinzel',serif;font-size:1.4rem;font-weight:900;
+  font-family:var(--font-display);font-size:1.4rem;font-weight:900;
   background:linear-gradient(135deg,var(--purple-light),var(--teal));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   letter-spacing:.05em;cursor:pointer;white-space:nowrap;
@@ -70,7 +78,7 @@ header{
 .nav-btn{
   background:transparent;border:1px solid var(--border);
   color:var(--text2);padding:6px 14px;border-radius:20px;
-  font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:600;
+  font-family:var(--font-body);font-size:.82rem;font-weight:600;
   cursor:pointer;transition:all .2s;white-space:nowrap;
 }
 .nav-btn:hover{border-color:var(--purple);color:var(--purple-light)}
@@ -87,7 +95,7 @@ header{
 .btn{
   display:inline-flex;align-items:center;gap:8px;
   padding:10px 22px;border-radius:8px;border:none;
-  font-family:'Nunito',sans-serif;font-weight:700;font-size:.9rem;
+  font-family:var(--font-body);font-weight:700;font-size:.9rem;
   cursor:pointer;transition:all .2s;text-decoration:none;
 }
 .btn-primary{
@@ -128,7 +136,7 @@ label{
 input[type="text"],input[type="number"],select,textarea{
   width:100%;background:var(--bg2);border:1px solid var(--border);
   border-radius:8px;padding:9px 13px;color:var(--text);
-  font-family:'Nunito',sans-serif;font-size:.9rem;
+  font-family:var(--font-body);font-size:.9rem;
   transition:border-color .2s,box-shadow .2s;outline:none;
 }
 input:focus,select:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(133,64,181,.15)}
@@ -165,7 +173,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
 
 /* ===== SECTION TITLES ===== */
 .section-title{
-  font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;
+  font-family:var(--font-display);font-size:1.1rem;font-weight:700;
   color:var(--text);margin-bottom:14px;
   display:flex;align-items:center;gap:10px;
 }
@@ -176,7 +184,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
 .tab{
   padding:8px 18px;border-radius:8px;border:1px solid var(--border);
   background:transparent;color:var(--text2);
-  font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;
+  font-family:var(--font-body);font-weight:700;font-size:.85rem;
   cursor:pointer;transition:all .2s;
 }
 .tab.active{background:var(--purple);border-color:var(--purple);color:#fff}
@@ -238,7 +246,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
 /* ===== HOME ===== */
 .hero{padding:60px 20px 40px;text-align:center}
 .hero-title{
-  font-family:'Cinzel',serif;font-weight:900;
+  font-family:var(--font-display);font-weight:900;
   font-size:clamp(2rem,6vw,3.5rem);
   background:linear-gradient(135deg,var(--purple-light) 0%,var(--teal) 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
@@ -276,7 +284,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
 .bracket{display:flex;align-items:flex-start;min-width:max-content}
 .bracket-round{display:flex;flex-direction:column}
 .bracket-round-title{
-  font-family:'Cinzel',serif;font-size:.75rem;font-weight:700;
+  font-family:var(--font-display);font-size:.75rem;font-weight:700;
   color:var(--teal);text-align:center;padding:4px 20px 12px;
   letter-spacing:.08em;text-transform:uppercase;
 }
@@ -299,7 +307,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
   margin:4px 8px 8px;
   padding:4px 10px;font-size:.75rem;border-radius:6px;
   background:rgba(133,64,181,.15);border:1px solid var(--purple);
-  color:var(--purple-light);cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;
+  color:var(--purple-light);cursor:pointer;font-family:var(--font-body);font-weight:700;
   transition:all .2s;
 }
 .b-enter-btn:hover{background:rgba(133,64,181,.3)}
@@ -318,7 +326,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
   max-height:90vh;overflow-y:auto;
 }
 .modal-title{
-  font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;
+  font-family:var(--font-display);font-size:1.15rem;font-weight:700;
   margin-bottom:16px;color:var(--purple-light);
 }
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
@@ -341,7 +349,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
 .divider{height:1px;background:var(--border);margin:14px 0}
 .empty{text-align:center;padding:36px 20px;color:var(--text3)}
 .empty-icon{font-size:2.2rem;margin-bottom:8px}
-.cinzel{font-family:'Cinzel',serif}
+.cinzel{font-family:var(--font-display)}
 .flex{display:flex}
 .flex-wrap{flex-wrap:wrap}
 .gap-8{gap:8px}
@@ -364,7 +372,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
   flex-wrap:wrap;gap:12px;margin-bottom:20px;
   padding-bottom:14px;border-bottom:1px solid var(--border);
 }
-.round-title{font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700}
+.round-title{font-family:var(--font-display);font-size:1.35rem;font-weight:700}
 
 .record .w{color:var(--win)}
 .record .l{color:var(--loss)}
@@ -1353,7 +1361,7 @@ function renderResults(){
   const top3=sorted.slice(0,3);
   let html=`
     <div class="card mb-16" style="text-align:center;background:linear-gradient(135deg,rgba(133,64,181,.2),rgba(156,234,216,.08))">
-      <div style="font-family:'Cinzel',serif;font-size:.82rem;color:var(--teal);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">${esc(T.name)}</div>
+      <div style="font-family:var(--font-display);font-size:.82rem;color:var(--teal);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">${esc(T.name)}</div>
       <div class="text-sm text-muted">${gameLabel(T)} · ${fmtLabel(T)} · ${T.date||'—'} · ${T.players.length} players</div>
     </div>
     <div style="display:flex;gap:14px;justify-content:center;margin-bottom:28px;flex-wrap:wrap">
