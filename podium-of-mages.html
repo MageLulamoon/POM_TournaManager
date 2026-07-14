@@ -198,6 +198,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
 .pairing-card.done{border-color:rgba(78,203,138,.4)}
 .pairing-card.bye{border-color:rgba(156,234,216,.25);opacity:.75}
 .pairing-card.conflict{border-color:rgba(224,90,122,.5);background:rgba(224,90,122,.04)}
+.match-winner{color:var(--purple-light);font-weight:800}
 
 /* Match layout: [Player1] [VS] [Player2] */
 .match-grid{
@@ -445,6 +446,7 @@ tr:hover td{background:rgba(133,64,181,.05)}
             <label>Format</label>
             <select id="tFormat" onchange="onFormatChange()">
               <option value="swiss">Swiss</option>
+              <option value="robin">Round Robin</option>
               <option value="single">Single Elim</option>
               <option value="double">Double Elim</option>
               <option value="swiss_cut">Swiss + Top Cut</option>
@@ -659,7 +661,7 @@ const uid = () => Math.random().toString(36).slice(2,10);
 const esc = s => s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const getP = id => T?.players.find(p=>p.id===id);
 const gameLabel = t => t.game==='pokemon'?'⚡ Pokémon TCG':t.game==='beyblade'?'🌀 Beyblade':'🎮'+(t.customGame||'Custom');
-const fmtLabel = t => ({swiss:'Swiss',single:'Single Elim',double:'Double Elim',swiss_cut:'Swiss+Cut'})[t.format]||t.format;
+const fmtLabel = t => ({swiss:'Swiss',robin:'Round Robin',single:'Single Elim',double:'Double Elim',swiss_cut:'Swiss+Cut'})[t.format]||t.format;
 const isPow2 = n => n>0&&(n&(n-1))===0;
 
 // =====================================================
@@ -718,12 +720,12 @@ function updateGameFields(){
 function renderGameFields(cid,game){
   const el=document.getElementById(cid); if(!el)return;
   if(game==='pokemon') el.innerHTML=`
-    <div class="form-group"><label>Deck / Archetype</label><input type="text" id="${cid}_deck" placeholder="e.g. Charizard ex / Pidgeot ex"></div>
-    <div class="form-group"><label>Deck List (optional)</label><textarea id="${cid}_dl" placeholder="Paste deck list..."></textarea></div>`;
+    <div class="form-group"><label>Deck / Archetype <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label><input type="text" id="${cid}_deck" placeholder="e.g. Charizard ex / Pidgeot ex"></div>
+    <div class="form-group"><label>Deck List <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label><textarea id="${cid}_dl" placeholder="Paste deck list..."></textarea></div>`;
   else if(game==='beyblade') el.innerHTML=`
-    <div class="form-group"><label>Combo Name</label><input type="text" id="${cid}_combo" placeholder="e.g. Dranzer S"></div>
-    <div class="form-group"><label>Parts (Blade / Ratchet / Bit)</label><input type="text" id="${cid}_parts" placeholder="e.g. Dranzer / 5-60 / Survive"></div>`;
-  else el.innerHTML=`<div class="form-group"><label>Extra Info</label><input type="text" id="${cid}_extra" placeholder="Any extra player info"></div>`;
+    <div class="form-group"><label>Combo Name <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label><input type="text" id="${cid}_combo" placeholder="e.g. Dranzer S"></div>
+    <div class="form-group"><label>Parts <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label><input type="text" id="${cid}_parts" placeholder="e.g. Dranzer / 5-60 / Survive"></div>`;
+  else el.innerHTML=`<div class="form-group"><label>Extra Info <span style="color:var(--text3);font-weight:400;text-transform:none">(optional)</span></label><input type="text" id="${cid}_extra" placeholder="Any extra player info"></div>`;
 }
 
 function getFields(cid,game){
@@ -745,7 +747,7 @@ function metaStr(p,game){
 // =====================================================
 function onFormatChange(){
   const f=document.getElementById('tFormat').value;
-  document.getElementById('swissOpts').style.display=(f==='single'||f==='double')?'none':'block';
+  document.getElementById('swissOpts').style.display=(f==='single'||f==='double'||f==='robin')?'none':'block';
   document.getElementById('cutWrap').style.display=f==='swiss_cut'?'block':'none';
 }
 
@@ -809,6 +811,7 @@ function startTournament(){
   T.createdAt=new Date().toISOString();
 
   if(format==='single'||format==='double'){T.phase='bracket';generateBracket();}
+  else if(format==='robin'){T.phase='robin';generateRoundRobin();}
   else {T.phase='swiss';generateSwissRound();}
 
   setupPlayers=[];renderSetupPlayers();
@@ -878,29 +881,50 @@ function renderTournament(){
   document.getElementById('fmtBadge').textContent=fmtLabel(T);
   document.getElementById('gameBadge').textContent=gameLabel(T);
 
-  const round=T.allRounds[T.allRounds.length-1];
-  if(T.phase==='swiss'){
-    document.getElementById('roundTitle').textContent='Round '+T.currentRound+' of '+T.rounds;
+  if(T.phase==='swiss'||T.phase==='robin'){
+    document.getElementById('roundTitle').textContent=
+      T.phase==='robin'
+        ? 'Round Robin — Round '+T.currentRound+' of '+T.allRounds.length
+        : 'Round '+T.currentRound+' of '+T.rounds;
+    const round=T.allRounds[T.allRounds.length-1];
+    renderPairings(round);
+    updateBtns(round);
   } else {
     document.getElementById('roundTitle').textContent=T.format==='swiss_cut'?'Top Cut Bracket':'Bracket';
+    renderBracketAsPairings();
+    updateBtns(null);
   }
-
-  renderPairings(round);
   renderStandings();
   renderBracket();
-  updateBtns(round);
 }
 
 function updateBtns(round){
   const nb=document.getElementById('nextRoundBtn');
   const fb=document.getElementById('finishBtn');
-  if(T.phase==='bracket'){nb.style.display='none';fb.style.display='inline-flex';fb.textContent='🏆 Finish & Results';fb.disabled=false;return}
+  // Bracket phase
+  if(T.phase==='bracket'){
+    nb.style.display='none';
+    fb.style.display='inline-flex';fb.textContent='🏆 Finish & Results';
+    const allDone=T.bracketData?.rounds.every(r=>r.every(m=>m.done));
+    fb.disabled=!allDone;
+    return;
+  }
+  // Round robin
+  if(T.phase==='robin'){
+    const allDone=round?.pairings.every(p=>p.done);
+    const isLast=T.currentRound>=T.allRounds.length;
+    nb.disabled=!allDone;
+    if(isLast){nb.style.display='none';fb.style.display='inline-flex';fb.textContent='🏆 Finish';fb.disabled=!allDone;}
+    else{nb.style.display='inline-flex';nb.textContent='Next Round →';fb.style.display='none';}
+    return;
+  }
+  // Swiss
   const allDone=round?.pairings.every(p=>p.done);
   const isLast=T.currentRound>=T.rounds;
   nb.disabled=!allDone;
   if(isLast&&T.format==='swiss'){nb.style.display='none';fb.style.display='inline-flex';fb.textContent='🏆 Finish';fb.disabled=!allDone;}
   else if(isLast&&T.format==='swiss_cut'){nb.style.display='none';fb.style.display='inline-flex';fb.textContent='🏆 Generate Top Cut';fb.disabled=!allDone;}
-  else{nb.style.display='inline-flex';fb.style.display='none';}
+  else{nb.style.display='inline-flex';nb.textContent='Next Round →';fb.style.display='none';}
 }
 
 // =====================================================
@@ -1126,10 +1150,15 @@ function undoPairing(pairId){
 function nextRound(){
   const round=T.allRounds[T.allRounds.length-1];
   if(!round.pairings.every(p=>p.done)){toast('Complete all matches first','error');return}
-  generateSwissRound();
-  renderTournament();
-  switchTab('pairings');
-  toast('Round '+T.currentRound+' started!','success');
+  if(T.phase==='robin'){
+    T.currentRound++;
+    renderTournament();switchTab('pairings');
+    toast('Round '+T.currentRound+' started!','success');
+  } else {
+    generateSwissRound();
+    renderTournament();switchTab('pairings');
+    toast('Round '+T.currentRound+' started!','success');
+  }
 }
 
 function finishTournament(){
@@ -1141,6 +1170,130 @@ function finishTournament(){
   } else {
     T.finished=true;showPage('results');
   }
+}
+
+// =====================================================
+//  ROUND ROBIN
+// =====================================================
+function generateRoundRobin(){
+  // Circle algorithm: generates all rounds so each player plays everyone once
+  const players=[...T.players.filter(p=>!p.dropped)];
+  const n=players.length;
+  // Add a dummy bye player if odd number
+  const list=n%2===0?[...players]:[...players,null];
+  const size=list.length;
+  const rounds=[];
+  // Fix first player, rotate the rest
+  for(let r=0;r<size-1;r++){
+    const pairings=[];
+    for(let i=0;i<size/2;i++){
+      const a=list[i], b=list[size-1-i];
+      if(!a||!b){
+        // bye
+        const real=a||b;
+        if(real) pairings.push({id:uid(),p1:real.id,p2:null,score1:2,score2:0,report1:2,report2:0,note:'',done:true,bye:true});
+      } else {
+        pairings.push({id:uid(),p1:a.id,p2:b.id,score1:null,score2:null,report1:null,report2:null,note:'',done:false,bye:false});
+      }
+    }
+    rounds.push({type:'swiss',roundNum:r+1,pairings});
+    // Apply byes immediately
+    pairings.filter(p=>p.bye).forEach(p=>applyResult(p.p1,null,2,0));
+    // Rotate: keep list[0] fixed, rotate rest
+    const rotated=[list[0],list[size-1],...list.slice(1,size-1)];
+    for(let i=0;i<size;i++) list[i]=rotated[i];
+  }
+  T.allRounds=rounds;
+  T.currentRound=1;
+}
+
+// =====================================================
+//  BRACKET AS PAIRINGS (shows bracket matches in the Pairings tab)
+// =====================================================
+function renderBracketAsPairings(){
+  const container=document.getElementById('pairingsList');
+  if(!T.bracketData){container.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><p>No bracket generated</p></div>';return}
+  propagate();
+  const rounds=T.bracketData.rounds;
+  const rNames=rounds.map((_,i)=>{
+    const fe=rounds.length-1-i;
+    return fe===0?'Final':fe===1?'Semifinals':fe===2?'Quarterfinals':'Round '+(i+1);
+  });
+
+  container.innerHTML='';
+  rounds.forEach((round,ri)=>{
+    const hasAnyActive=round.some(m=>!m.done&&m.p1&&m.p2);
+    const allDone=round.every(m=>m.done);
+    const header=document.createElement('div');
+    header.className='section-title';
+    header.style.marginTop=ri>0?'24px':'0';
+    header.innerHTML=rNames[ri]+(allDone?' <span class="badge badge-win" style="font-size:.7rem">✓ Complete</span>':hasAnyActive?' <span class="badge badge-purple" style="font-size:.7rem">● Active</span>':'');
+    container.appendChild(header);
+
+    round.forEach(m=>{
+      const p1=m.p1?getP(m.p1):null;
+      const p2=m.p2?getP(m.p2):null;
+      const div=document.createElement('div');
+      div.className='pairing-card'+(m.done?' done':'');
+      div.id='bpair-'+m.id;
+
+      if(m.done){
+        const w=m.winner?getP(m.winner):null;
+        div.innerHTML=`
+          <div class="match-grid">
+            <div class="match-player-name ${m.winner===m.p1?'match-winner':''}" onclick="${p1?`showInfo('${m.p1}')`:''}">${p1?esc(p1.name):'TBD'}</div>
+            <div class="match-vs">${m.score1!==null?m.score1+'–'+m.score2:'✓'}</div>
+            <div class="match-player-name ${m.winner===m.p2?'match-winner':''}" style="text-align:right" onclick="${p2?`showInfo('${m.p2}')`:''}">${p2?esc(p2.name):'TBD'}</div>
+          </div>
+          <div class="result-confirmed">
+            <span class="badge badge-win">Winner: ${esc(w?.name||'?')}</span>
+            <button class="btn btn-xs btn-ghost" onclick="undoBracketMatch('${m.id}')">Undo</button>
+          </div>`;
+      } else if(!m.p1&&!m.p2){
+        div.innerHTML=`<div class="text-muted text-sm" style="padding:8px 0">Waiting for previous round...</div>`;
+      } else {
+        div.innerHTML=`
+          <div class="match-grid">
+            <div class="match-player-name" onclick="${p1?`showInfo('${m.p1}')`:''}">${p1?esc(p1.name):'TBD'}</div>
+            <div class="match-vs">VS</div>
+            <div class="match-player-name" style="text-align:right" onclick="${p2?`showInfo('${m.p2}')`:''}">${p2?esc(p2.name):'TBD'}</div>
+          </div>
+          <div class="score-row" style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="number" min="0" max="99" placeholder="—" id="bs1-${m.id}" style="width:60px;text-align:center;padding:6px">
+            <span class="score-dash">–</span>
+            <input type="number" min="0" max="99" placeholder="—" id="bs2-${m.id}" style="width:60px;text-align:center;padding:6px">
+            <button class="btn btn-xs btn-primary" onclick="submitBracketInline('${m.id}')">Submit</button>
+          </div>`;
+      }
+      container.appendChild(div);
+    });
+  });
+}
+
+function submitBracketInline(mid){
+  const rounds=T.bracketData.rounds;
+  let match=null;
+  rounds.forEach(r=>r.forEach(m=>{if(m.id===mid)match=m}));
+  if(!match) return;
+  const s1=parseInt(document.getElementById('bs1-'+mid)?.value);
+  const s2=parseInt(document.getElementById('bs2-'+mid)?.value);
+  if(isNaN(s1)||isNaN(s2)){toast('Enter scores for both players','error');return}
+  match.score1=s1;match.score2=s2;
+  match.winner=s1>s2?match.p1:match.p2;
+  match.done=true;
+  propagate();renderTournament();
+  toast('Result saved!','success');
+}
+
+function undoBracketMatch(mid){
+  const rounds=T.bracketData.rounds;
+  let match=null;
+  rounds.forEach(r=>r.forEach(m=>{if(m.id===mid)match=m}));
+  if(!match||!match.done) return;
+  match.score1=null;match.score2=null;match.winner=null;match.done=false;
+  // Clear downstream matches that depended on this winner
+  propagate();renderTournament();
+  toast('Result undone','info');
 }
 
 // =====================================================
